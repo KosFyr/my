@@ -169,6 +169,7 @@
         let shuffledQuestions = [];
 
         function navigate(screen) {
+            console.log("Navigating to: " + screen); // Debugging
             document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
             document.getElementById(screen === 'home' ? 'home-screen' : 
                                    screen === 'math' ? 'math-menu' : 
