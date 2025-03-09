@@ -22,6 +22,17 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             width: 450px;
             text-align: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            color: #4a00e0;
+            font-size: 28px;
+            margin-bottom: 25px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
         button {
             background: linear-gradient(90deg, #8e2de2, #4a00e0);
@@ -43,118 +54,199 @@
             color: #666;
             cursor: not-allowed;
         }
+        .coming-soon-btn:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        #timer {
+            color: #ffcc00;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+            background: rgba(255, 204, 0, 0.1);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        #progress {
+            font-size: 18px;
+            color: #4a00e0;
+            margin-bottom: 15px;
+        }
+        .answer-btn {
+            width: 120px;
+            margin: 10px;
+        }
+        .correct {
+            background: #28a745 !important;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+        .wrong {
+            background: #dc3545 !important;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+        }
         #question {
             font-size: 18px;
             margin: 20px 0;
             line-height: 1.4;
         }
+        #next-btn {
+            background: #ffcc00;
+            color: #333;
+        }
+        #feedback {
+            font-size: 20px;
+            color: #4a00e0;
+            margin: 20px 0;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container" id="app">
+        <!-- Αρχικό Μενού -->
         <div id="home-screen">
             <h1>MyStudyPlan</h1>
-            <button id="math-btn">Μαθηματικά</button>
-            <button id="aoth-btn" class="coming-soon-btn">ΑΟΘ</button>
-            <button id="aepp-btn" class="coming-soon-btn">ΑΕΠΠ</button>
+            <button onclick="navigate('math')">Μαθηματικά</button>
+            <button class="coming-soon-btn" onclick="navigate('aoth')">ΑΟΘ</button>
+            <button class="coming-soon-btn" onclick="navigate('aepp')">ΑΕΠΠ</button>
         </div>
 
+        <!-- Μενού Μαθηματικών -->
         <div id="math-menu" style="display: none;">
             <h1>Μαθηματικά</h1>
-            <button id="quiz-btn">Σωστό / Λάθος</button>
-            <button class="coming-soon-btn">Θεωρήματα</button>
-            <button class="coming-soon-btn">Αποδείξεις</button>
-            <button id="back-home">Επιστροφή</button>
+            <button onclick="startQuiz()">Σωστό / Λάθος</button>
+            <button class="coming-soon-btn" onclick="navigate('theorems')">Θεωρήματα</button>
+            <button class="coming-soon-btn" onclick="navigate('proofs')">Αποδείξεις</button>
+            <button onclick="navigate('home')">Επιστροφή</button>
         </div>
 
+        <!-- Coming Soon Σελίδα -->
+        <div id="coming-soon" style="display: none;">
+            <h1>Coming Soon</h1>
+            <button onclick="navigate('home')">Επιστροφή</button>
+        </div>
+
+        <!-- Quiz Σωστό / Λάθος -->
         <div id="quiz-screen" style="display: none;">
             <h1>Σωστό / Λάθος</h1>
+            <div id="timer">Χρόνος: 120 δευτ.</div>
+            <div id="progress"></div>
             <p id="question"></p>
-            <button class="answer-btn" id="true-btn">ΣΩΣΤΟ</button>
-            <button class="answer-btn" id="false-btn">ΛΑΘΟΣ</button>
-            <button id="next-btn" style="display: none;">Επόμενη Ερώτηση</button>
+            <button class="answer-btn" onclick="answer(true)">ΣΩΣΤΟ</button>
+            <button class="answer-btn" onclick="answer(false)">ΛΑΘΟΣ</button>
+            <button id="next-btn" style="display: none;" onclick="nextQuestion()">Επόμενη Ερώτηση</button>
         </div>
 
+        <!-- Ολοκλήρωση Quiz -->
         <div id="results-screen" style="display: none;">
             <h1>Αποτελέσματα</h1>
             <p id="score"></p>
             <p id="feedback"></p>
-            <button id="retry-btn">Παίξε Ξανά</button>
-            <button id="back-home-2">Επιστροφή στο Αρχικό Μενού</button>
+            <button onclick="startQuiz()">Παίξε Ξανά</button>
+            <button onclick="navigate('home')">Επιστροφή στο Αρχικό Μενού</button>
         </div>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById("math-btn").addEventListener("click", function() {
-                navigate("math-menu");
-            });
+        const questions = [
+            { text: "Κάθε κατακόρυφη ευθεία έχει το πολύ ένα κοινό σημείο με τη γραφική παράσταση μιας συνάρτησης f.", answer: true },
+            { text: "Η γραφική παράσταση της συνάρτησης -f είναι συμμετρική, ως προς τον άξονα x'x, της γραφικής παράστασης της f.", answer: true },
+            { text: "Η γραφική παράσταση της συνάρτησης f(x) = √|x|, x ∈ ℝ έχει άξονα συμμετρίας τον y'y.", answer: true },
+            { text: "Αν f, g είναι δύο συναρτήσεις με πεδία ορισμού A, B αντίστοιχα, τότε η g∘f ορίζεται αν f(A) ∩ B ≠ ∅.", answer: true },
+            { text: "Αν για δύο συναρτήσεις f, g ορίζονται οι συναρτήσεις f∘g και g∘f, τότε ισχύει πάντοτε ότι f∘g = g∘f.", answer: false },
+            { text: "Αν για δύο συναρτήσεις f, g ορίζονται οι f∘g και g∘f, τότε είναι υποχρεωτικά f∘g ≠ g∘f.", answer: false },
+            { text: "Το πεδίο ορισμού της g∘f αποτελείται από όλα τα στοιχεία x του πεδίου ορισμού της f, για τα οποία το f(x) ανήκει στο πεδίο ορισμού της g.", answer: true },
+            { text: "Αν f, g, h είναι τρεις συναρτήσεις και ορίζεται η h∘(g∘f) τότε ορίζεται και η (h∘g)∘f και ισχύει h∘(g∘f) = (h∘g)∘f.", answer: true },
+            { text: "Μια συνάρτηση f με πεδίο ορισμού A λέμε ότι παρουσιάζει (ολικό) ελάχιστο στο x₀ ∈ A, όταν f(x) ≥ f(x₀) για κάθε x ∈ A.", answer: true },
+            { text: "Μία συνάρτηση f λέγεται γνησίως αύξουσα σε ένα διάστημα Δ του πεδίου ορισμού της, αν υπάρχουν x₁, x₂ ∈ Δ με x₁ < x₂ τέτοια, ώστε f(x₁) < f(x₂).", answer: false }
+        ];
 
-            document.getElementById("quiz-btn").addEventListener("click", function() {
-                startQuiz();
-            });
-
-            document.getElementById("back-home").addEventListener("click", function() {
-                navigate("home-screen");
-            });
-
-            document.getElementById("retry-btn").addEventListener("click", function() {
-                startQuiz();
-            });
-
-            document.getElementById("back-home-2").addEventListener("click", function() {
-                navigate("home-screen");
-            });
-        });
+        let currentScreen = 'home';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 120; // 2 λεπτά ανά ερώτηση
+        let shuffledQuestions = [];
 
         function navigate(screen) {
             document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
-            document.getElementById(screen).style.display = 'block';
+            document.getElementById(screen === 'home' ? 'home-screen' : 
+                                   screen === 'math' ? 'math-menu' : 
+                                   screen === 'quiz' ? 'quiz-screen' : 
+                                   screen === 'results' ? 'results-screen' : 'coming-soon').style.display = 'block';
+            currentScreen = screen;
         }
 
-        const questions = [
-            { text: "Κάθε κατακόρυφη ευθεία έχει το πολύ ένα κοινό σημείο με τη γραφική παράσταση μιας συνάρτησης.", answer: true },
-            { text: "Η γραφική παράσταση της f(x) = -x είναι συμμετρική στον y άξονα.", answer: false }
-        ];
-
-        let currentQuestionIndex = 0;
-        let score = 0;
-
         function startQuiz() {
+            shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
             currentQuestionIndex = 0;
             score = 0;
-            navigate("quiz-screen");
+            timeLeft = 120;
+            navigate('quiz');
             showQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `Χρόνος: ${timeLeft} δευτ.`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    nextQuestion(); // Προχωρά στην επόμενη ερώτηση αν τελειώσει ο χρόνος
+                }
+            }, 1000);
         }
 
         function showQuestion() {
-            const question = questions[currentQuestionIndex];
-            document.getElementById("question").textContent = question.text;
+            const question = shuffledQuestions[currentQuestionIndex];
+            document.getElementById('question').textContent = question.text;
+            document.getElementById('progress').textContent = `Ερώτηση ${currentQuestionIndex + 1}/10`;
+            document.getElementById('next-btn').style.display = 'none';
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('correct', 'wrong');
+            });
         }
 
-        document.getElementById("true-btn").addEventListener("click", function() {
-            answer(true);
-        });
-        document.getElementById("false-btn").addEventListener("click", function() {
-            answer(false);
-        });
-
         function answer(userAnswer) {
-            if (userAnswer === questions[currentQuestionIndex].answer) {
+            clearInterval(timer); // Σταματά ο χρόνος όταν απαντά
+            const question = shuffledQuestions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            if (userAnswer === question.answer) {
+                buttons[userAnswer ? 0 : 1].classList.add('correct');
                 score++;
+            } else {
+                buttons[userAnswer ? 0 : 1].classList.add('wrong');
+                buttons[question.answer ? 0 : 1].classList.add('correct');
             }
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
             currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
+            if (currentQuestionIndex < 10) {
+                timeLeft = 120; // Reset χρόνου για την επόμενη ερώτηση
                 showQuestion();
+                startTimer();
             } else {
                 endQuiz();
             }
         }
 
         function endQuiz() {
-            navigate("results-screen");
-            document.getElementById("score").textContent = Πέτυχες ${score}/${questions.length} σωστές απαντήσεις!;
-            document.getElementById("feedback").textContent = score >= 2 ? "Καλή προσπάθεια!" : "Δοκίμασε ξανά!";
+            clearInterval(timer);
+            navigate('results');
+            document.getElementById('score').textContent = `Πέτυχες ${score}/10 απαντήσεις σωστά`;
+            let feedback = '';
+            if (score >= 9) feedback = "Εξαιρετική επίδοση! Είσαι έτοιμος για τις εξετάσεις!";
+            else if (score >= 7) feedback = "Πολύ καλά! Λίγη προσοχή ακόμα και είσαι έτοιμος!";
+            else if (score >= 5) feedback = "Μπορείς καλύτερα! Δοκίμασε ξανά!";
+            else feedback = "Χρειάζεται περισσότερη εξάσκηση! Ξαναδοκίμασε!";
+            document.getElementById('feedback').textContent = feedback;
         }
     </script>
 </body>
