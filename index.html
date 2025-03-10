@@ -23,6 +23,7 @@
             width: 450px;
             text-align: center;
             animation: fadeIn 0.5s ease-in;
+            position: relative;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
@@ -99,6 +100,14 @@
             margin: 20px 0;
             font-weight: bold;
         }
+        #back-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4444;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -124,7 +133,7 @@
         <div id="quiz-options" style="display: none;">
             <h1>Σωστό / Λάθος</h1>
             <button onclick="startRandomQuiz()">Τεστ 10 Ερωτήσεων</button>
-            <button onclick="navigate('units')">Ενότητες</button>
+            <button onclick="navigate('units')">Τεστ ανά Ενότητα</button>
             <button onclick="navigate('math')">Επιστροφή</button>
         </div>
 
@@ -147,6 +156,7 @@
         <!-- Quiz Σωστό / Λάθος -->
         <div id="quiz-screen" style="display: none;">
             <h1>Σωστό / Λάθος</h1>
+            <button id="back-btn" onclick="navigate('quiz-options')">Επιστροφή</button>
             <div id="timer">Χρόνος: 120 δευτ.</div>
             <div id="progress"></div>
             <p id="question"></p>
@@ -265,7 +275,7 @@
             { text: "Έστω μια συνάρτηση f συνεχής σε ένα διάστημα Δ και δύο φορές παραγωγίσιμη στο εσωτερικό του Δ. Αν η f είναι κυρτή στο Δ, τότε υποχρεωτικά f''(x) > 0 για κάθε εσωτερικό σημείο του Δ.", answer: false },
             { text: "Έστω μια συνάρτηση f παραγωγίσιμη σ’ ένα διάστημα (α, β) με εξαίρεση ίσως ένα σημείο του x₀. Αν η f είναι κυρτή στο (α, x₀) και κοίλη στο (x₀, β) ή αντιστρόφως, τότε το σημείο A(x₀, f(x₀)) είναι υποχρεωτικά σημείο καμπής της γραφικής παράστασης της f.", answer: false },
             { text: "Υπάρχει πολυωνυμική συνάρτηση βαθμού ν ≥ 2, η οποία έχει ασύμπτωτη.", answer: false },
-            { text: "Η γραφική παράσταση μιας συνάρτησης f: ℝ → ℝ μπορεί να τέμνει μια ασύμπτωτή της.", answer: true }
+            { text: "Η γραφική παράσταση μιας συνάρτησης f: ℝ → ℝ μπορεί να τέμνει μια ασύμπτωτη της.", answer: true }
         ];
 
         let currentScreen = 'home';
@@ -294,6 +304,11 @@
                                    screen === 'quiz' ? 'quiz-screen' : 
                                    screen === 'results' ? 'results-screen' : 'coming-soon').style.display = 'block';
             currentScreen = screen;
+
+            // Σταματάμε τον χρονοδιακόπτη αν επιστρέφουμε από το quiz
+            if (screen !== 'quiz') {
+                clearInterval(timer);
+            }
         }
 
         function startRandomQuiz() {
