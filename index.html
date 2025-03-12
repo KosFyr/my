@@ -108,6 +108,13 @@
             padding: 8px 15px;
             font-size: 14px;
         }
+        #history-audio {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffcc00;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +125,7 @@
             <button onclick="navigate('math')">Μαθηματικά</button>
             <button class="coming-soon-btn" onclick="navigate('aoth')">ΑΟΘ</button>
             <button class="coming-soon-btn" onclick="navigate('aepp')">ΑΕΠΠ</button>
+            <button onclick="navigate('history')">Ιστορία</button>
         </div>
 
         <!-- Μενού Μαθηματικών -->
@@ -172,6 +180,34 @@
             <p id="feedback"></p>
             <button onclick="navigate('quiz-options')">Παίξε Ξανά</button>
             <button onclick="navigate('home')">Επιστροφή στο Αρχικό Μενού</button>
+        </div>
+
+        <!-- Μενού Ιστορίας -->
+        <div id="history-menu" style="display: none;">
+            <h1>Ιστορία</h1>
+            <button onclick="navigate('history-unit1')">Εισαγωγή Ενότητας 1</button>
+            <button class="coming-soon-btn" onclick="navigate('coming-soon')">Ενότητα 2</button>
+            <button onclick="navigate('home')">Επιστροφή</button>
+        </div>
+
+        <!-- Εισαγωγή Ενότητας 1 Ιστορίας -->
+        <div id="history-unit1" style="display: none;">
+            <h1>Εισαγωγή Ενότητας 1</h1>
+            <p id="intro-text">
+                <span class="sentence">Το ανεξάρτητο νεοελληνικό κράτος άρχισε την ιστορική του πορεία το 1830, μετά από μία δεκαετία σκληρών αγώνων, μεγάλων καταστροφών και ανθρώπινων απωλειών.</span>
+                <span class="sentence">Η παγίωση της τάξης, της στοιχειώδους έστω κρατικής λειτουργίας και η αρχή της ανοικοδόμησης και της οικονομικής ανάπτυξης έχουν την αφετηρία τους στο 1833, μετά την εγκατάσταση της βαυαρικής δυναστείας στην Ελλάδα.</span>
+                <span class="sentence">Το πρόβλημα που αντιμετώπιζε η χώρα δεν ήταν μόνο η αποκατάσταση των ζημιών που ο πολυετής πόλεμος και η αναρχία είχαν προκαλέσει.</span>
+                <span class="sentence">Σχεδόν όλες οι δομές και οι λειτουργίες της κοινωνίας, στον οικονομικό ειδικά χώρο, ήταν απαρχαιωμένες και βρίσκονταν σε πλήρη αναντιστοιχία με τις προόδους που τα κράτη της Δυτικής Ευρώπης είχαν ήδη πετύχει στον τομέα αυτό.</span>
+                <span class="sentence">Τα κράτη αυτά ζούσαν ήδη τη βιομηχανική επανάσταση και το μετασχηματισμό των παραγωγικών και οικονομικών τους δυνάμεων.</span>
+                <span class="sentence">Η Ελλάδα βρισκόταν ακόμα στην Ανατολή, εκεί όπου η βιομηχανία ήταν άγνωστη, οι μεταφορές διεξάγονταν με πρωτόγονα μέσα και οι καλλιέργειες γίνονταν με μεθόδους οι οποίες ήταν γνωστές -οι περισσότερες- από την εποχή του Ησιόδου.</span>
+            </p>
+            <audio id="history-audio" src="ElevenLabs_2025-03-12T16_54_40_Rachel_pre_s50_sb75_se0_b_m2.mp3"></audio>
+            <div>
+                <button onclick="playPauseAudio()">Play/Pause</button>
+                <button onclick="rewindAudio()">-10 δευτ.</button>
+                <button onclick="forwardAudio()">+10 δευτ.</button>
+            </div>
+            <button onclick="navigate('history-menu')">Επιστροφή</button>
         </div>
     </div>
 
@@ -282,11 +318,10 @@
         let currentQuestionIndex = 0;
         let score = 0;
         let timer;
-        let timeLeft = 120; // 2 λεπτά ανά ερώτηση
+        let timeLeft = 120;
         let shuffledQuestions = [];
         let totalQuestions = 0;
 
-        // Fisher-Yates Shuffle
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -302,17 +337,22 @@
                                    screen === 'quiz-options' ? 'quiz-options' : 
                                    screen === 'units' ? 'units' : 
                                    screen === 'quiz' ? 'quiz-screen' : 
-                                   screen === 'results' ? 'results-screen' : 'coming-soon').style.display = 'block';
+                                   screen === 'results' ? 'results-screen' : 
+                                   screen === 'history' ? 'history-menu' : 
+                                   screen === 'history-unit1' ? 'history-unit1' : 
+                                   'coming-soon').style.display = 'block';
             currentScreen = screen;
 
-            // Σταματάμε τον χρονοδιακόπτη αν επιστρέφουμε από το quiz
             if (screen !== 'quiz') {
                 clearInterval(timer);
+            }
+            if (screen === 'history-unit1') {
+                setupAudioSync();
             }
         }
 
         function startRandomQuiz() {
-            shuffledQuestions = shuffleArray([...questions]).slice(0, 10); // 10 τυχαίες ερωτήσεις
+            shuffledQuestions = shuffleArray([...questions]).slice(0, 10);
             totalQuestions = 10;
             currentQuestionIndex = 0;
             score = 0;
@@ -324,16 +364,16 @@
 
         function startUnitQuiz(unit) {
             if (unit === 'functions') {
-                shuffledQuestions = shuffleArray(questions.slice(0, 25)); // 0-24
+                shuffledQuestions = shuffleArray(questions.slice(0, 25));
                 totalQuestions = 25;
             } else if (unit === 'limits') {
-                shuffledQuestions = shuffleArray(questions.slice(25, 51)); // 25-50
+                shuffledQuestions = shuffleArray(questions.slice(25, 51));
                 totalQuestions = 26;
             } else if (unit === 'continuity') {
-                shuffledQuestions = shuffleArray(questions.slice(51, 61)); // 51-60
+                shuffledQuestions = shuffleArray(questions.slice(51, 61));
                 totalQuestions = 10;
             } else if (unit === 'derivatives') {
-                shuffledQuestions = shuffleArray(questions.slice(61, 99)); // 61-98
+                shuffledQuestions = shuffleArray(questions.slice(61, 99));
                 totalQuestions = 38;
             }
             currentQuestionIndex = 0;
@@ -406,6 +446,58 @@
             else feedback = "Χρειάζεται περισσότερη εξάσκηση! Ξαναδοκίμασε!";
             document.getElementById('feedback').textContent = feedback;
         }
+
+        function playPauseAudio() {
+            const audio = document.getElementById('history-audio');
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        }
+
+        function rewindAudio() {
+            const audio = document.getElementById('history-audio');
+            audio.currentTime = Math.max(0, audio.currentTime - 10);
+            highlightSentence(audio.currentTime);
+        }
+
+        function forwardAudio() {
+            const audio = document.getElementById('history-audio');
+            audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+            highlightSentence(audio.currentTime);
+        }
+
+        function setupAudioSync() {
+            const audio = document.getElementById('history-audio');
+            const sentences = document.querySelectorAll('.sentence');
+            // Υποθέτουμε ότι η διάρκεια του ήχου κατανέμεται ομοιόμορφα στις 6 προτάσεις
+            const sentenceDuration = audio.duration / sentences.length;
+
+            audio.ontimeupdate = () => {
+                const currentTime = audio.currentTime;
+                highlightSentence(currentTime, sentenceDuration);
+            };
+
+            audio.onended = () => {
+                sentences.forEach(s => s.classList.remove('highlight'));
+            };
+        }
+
+        function highlightSentence(currentTime, sentenceDuration = 10) {
+            const sentences = document.querySelectorAll('.sentence');
+            const currentIndex = Math.floor(currentTime / sentenceDuration);
+            
+            sentences.forEach((sentence, index) => {
+                if (index === currentIndex) {
+                    sentence.classList.add('highlight');
+                } else {
+                    sentence.classList.remove('highlight');
+                }
+            });
+        }
     </script>
+</body>
+</html>
 </body>
 </html>
