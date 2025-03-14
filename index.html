@@ -174,16 +174,32 @@
         }
         #answer-options {
             margin: 20px 0;
-            text-align: left;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
         }
         #answer-options label {
-            display: block;
+            display: flex;
+            align-items: center;
             margin: 5px 0;
+        }
+        #answer-options input[type="checkbox"] {
+            transform: scale(1.5); /* Αυξάνει το μέγεθος του checkbox */
+            margin-right: 10px;
         }
         #instructions {
             font-size: 14px;
             color: #666;
             margin-bottom: 15px;
+        }
+        .correct-tick {
+            color: #28a745;
+            font-size: 20px;
+            margin-left: 5px;
+            content: "✓";
+        }
+        .wrong-answer {
+            color: #dc3545;
         }
     </style>
 </head>
@@ -590,12 +606,13 @@ F) Science and Maths lessons given. Experienced tutor, specialising in helping s
             const correctAnswers = question.answer;
 
             checkboxes.forEach(cb => {
+                const label = cb.parentElement;
                 cb.disabled = true;
                 if (correctAnswers.includes(cb.value)) {
-                    cb.parentElement.style.color = '#28a745';
+                    label.innerHTML += ' <span class="correct-tick">✓</span>'; // Προσθήκη πράσινου tick
                 }
                 if (selectedAnswers.includes(cb.value) && !correctAnswers.includes(cb.value)) {
-                    cb.parentElement.style.color = '#dc3545';
+                    label.classList.add('wrong-answer');
                 }
             });
 
