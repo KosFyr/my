@@ -84,12 +84,14 @@
             background: #dc3545 !important;
             box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
         }
-        #question {
-            font-size: 18px;
+        #advertisements, #question {
+            font-size: 16px;
             margin: 20px 0;
             line-height: 1.4;
+            text-align: left;
+            white-space: pre-line;
         }
-        #next-btn {
+        #next-btn, #submit-btn {
             background: #ffcc00;
             color: #333;
         }
@@ -121,7 +123,9 @@
             justify-content: center;
             gap: 20px;
         }
-        .audio-player button { background: transparent !important; border: none !important;
+        .audio-player button { 
+            background: transparent !important; 
+            border: none !important;
             background: #ffffff;
             border: 2px solid #000000;
             width: 80px;
@@ -168,6 +172,19 @@
             display: none;
             z-index: 10;
         }
+        #answer-options {
+            margin: 20px 0;
+            text-align: left;
+        }
+        #answer-options label {
+            display: block;
+            margin: 5px 0;
+        }
+        #instructions {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -179,6 +196,7 @@
             <button class="coming-soon-btn" onclick="navigate('aoth')">ΑΟΘ</button>
             <button class="coming-soon-btn" onclick="navigate('aepp')">ΑΕΠΠ</button>
             <button onclick="navigate('history')">Ιστορία</button>
+            <button onclick="navigate('english')">Αγγλικά</button>
         </div>
 
         <!-- Μενού Μαθηματικών -->
@@ -214,15 +232,17 @@
             <button onclick="navigate('home')">Επιστροφή</button>
         </div>
 
-        <!-- Quiz Σωστό / Λάθος -->
+        <!-- Quiz Screen -->
         <div id="quiz-screen" style="display: none;">
-            <h1>Σωστό / Λάθος</h1>
+            <h1 id="quiz-title">Σωστό / Λάθος</h1>
             <button id="back-btn" onclick="navigate('quiz-options')">Επιστροφή</button>
             <div id="timer">Χρόνος: 120 δευτ.</div>
             <div id="progress"></div>
+            <div id="advertisements" style="display: none;"></div>
+            <div id="instructions" style="display: none;">Επιλέξτε μία ή δύο απαντήσεις και πατήστε Υποβολή.</div>
             <p id="question"></p>
-            <button class="answer-btn" onclick="answer(true)">ΣΩΣΤΟ</button>
-            <button class="answer-btn" onclick="answer(false)">ΛΑΘΟΣ</button>
+            <div id="answer-options"></div>
+            <button id="submit-btn" style="display: none;" onclick="submitAnswer()">Υποβολή</button>
             <button id="next-btn" style="display: none;" onclick="nextQuestion()">Επόμενη Ερώτηση</button>
         </div>
 
@@ -263,13 +283,21 @@
             <div class="progress-bar" onclick="seekAudio(event)">
                 <div class="progress" id="progress-bar"></div>
             </div>
-            <button onclick="navigate('home')">Επιστροφή</button>
+            <button onclick="navigate('history-menu')">Επιστροφή</button>
             <div id="time-indicator"></div>
+        </div>
+
+        <!-- Μενού Αγγλικών -->
+        <div id="english-menu" style="display: none;">
+            <h1>Αγγλικά</h1>
+            <button onclick="startEnglishTest1()">Test 1</button>
+            <button class="coming-soon-btn" onclick="navigate('coming-soon')">Test 2</button>
+            <button onclick="navigate('home')">Επιστροφή</button>
         </div>
     </div>
 
     <script>
-        const questions = [
+        const mathQuestions = [
             { text: "Κάθε κατακόρυφη ευθεία έχει το πολύ ένα κοινό σημείο με τη γραφική παράσταση μιας συνάρτησης f.", answer: true },
             { text: "Η γραφική παράσταση της συνάρτησης -f είναι συμμετρική, ως προς τον άξονα x'x, της γραφικής παράστασης της f.", answer: true },
             { text: "Η γραφική παράσταση της συνάρτησης f(x) = √|x|, x ∈ ℝ έχει άξονα συμμετρίας τον y'y.", answer: true },
@@ -371,6 +399,20 @@
             { text: "Η γραφική παράσταση μιας συνάρτησης f: ℝ → ℝ μπορεί να τέμνει μια ασύμπτωτη της.", answer: true }
         ];
 
+        const englishAdvertisements = `A) I am a 25-year-old nanny with 6 years experience in childcare with babies, toddlers and older children. I also worked with newborn babies in a hospital. I have checkable references, a childcare certificate, police check and a First Aid Certificate. I am a driver and non-smoker. I have lived in Berlin for more than 7 years; my English and Spanish are very good. I am looking for a live-in nanny job in Madrid from November. If you need a loving, caring, responsible person to look after your children and teach them English, please contact me by email or by phone.
+B) Australian woman 32yrs, experienced PA, seeks job in Malaysia. Available end May. Bilingual in English and French. Partner: French. Work as a couple possible. Email: ...
+C) Indian web publisher seeks work: Website design, desktop publishing, book layout, graphic design. Part time or contract. Experienced, skilled, reliable. Contact: ...
+D) I have experience in banking, hotels, local government and manufacturing - all mostly working in administration type roles as well as vast experience with Microsoft packages, Sage and a range of other bespoke systems. I look forward to any replies or guidance...
+E) Driving job needed - Highly skilled driver, over 25 - Have held full clean Class Cl licence for 10 years - Know London extremely well - Willing to do physical work such as loading trucks - Want full time work - Contact ...
+F) Science and Maths lessons given. Experienced tutor, specialising in helping secondary school students with their state exams. Degree in Physics. Email ...`;
+
+        const englishTest1Questions = [
+            { text: "Question 1: Which person wants a teaching job?", options: ["A", "B", "C", "D", "E", "F"], answer: ["F"] },
+            { text: "Question 2: Which two people mention their foreign language skills?", options: ["A", "B", "C", "D", "E", "F"], answer: ["A", "B"] },
+            { text: "Question 3: Who would be willing to do part-time work?", options: ["A", "B", "C", "D", "E", "F"], answer: ["C"] },
+            { text: "Question 4: Which two people describe their personal qualities?", options: ["A", "B", "C", "D", "E", "F"], answer: ["A", "C"] }
+        ];
+
         let currentScreen = 'home';
         let currentQuestionIndex = 0;
         let score = 0;
@@ -378,6 +420,7 @@
         let timeLeft = 120;
         let shuffledQuestions = [];
         let totalQuestions = 0;
+        let currentQuizType = 'math'; // 'math' or 'english'
 
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -389,7 +432,7 @@
 
         function navigate(screen) {
             const audio = document.getElementById('history-audio');
-            if(audio && !audio.paused) {
+            if (audio && !audio.paused) {
                 audio.pause();
                 document.getElementById('play-pause-btn').textContent = '▶️';
             }
@@ -402,6 +445,7 @@
                                    screen === 'results' ? 'results-screen' : 
                                    screen === 'history' ? 'history-menu' : 
                                    screen === 'history-unit1' ? 'history-unit1' : 
+                                   screen === 'english' ? 'english-menu' : 
                                    'coming-soon').style.display = 'block';
             currentScreen = screen;
 
@@ -414,34 +458,51 @@
         }
 
         function startRandomQuiz() {
-            shuffledQuestions = shuffleArray([...questions]).slice(0, 10);
+            currentQuizType = 'math';
+            shuffledQuestions = shuffleArray([...mathQuestions]).slice(0, 10);
             totalQuestions = 10;
             currentQuestionIndex = 0;
             score = 0;
             timeLeft = 120;
             navigate('quiz');
+            document.getElementById('quiz-title').textContent = 'Σωστό / Λάθος';
             showQuestion();
             startTimer();
         }
 
         function startUnitQuiz(unit) {
+            currentQuizType = 'math';
             if (unit === 'functions') {
-                shuffledQuestions = shuffleArray(questions.slice(0, 25));
+                shuffledQuestions = shuffleArray(mathQuestions.slice(0, 25));
                 totalQuestions = 25;
             } else if (unit === 'limits') {
-                shuffledQuestions = shuffleArray(questions.slice(25, 51));
+                shuffledQuestions = shuffleArray(mathQuestions.slice(25, 51));
                 totalQuestions = 26;
             } else if (unit === 'continuity') {
-                shuffledQuestions = shuffleArray(questions.slice(51, 61));
+                shuffledQuestions = shuffleArray(mathQuestions.slice(51, 61));
                 totalQuestions = 10;
             } else if (unit === 'derivatives') {
-                shuffledQuestions = shuffleArray(questions.slice(61, 99));
+                shuffledQuestions = shuffleArray(mathQuestions.slice(61, 99));
                 totalQuestions = 38;
             }
             currentQuestionIndex = 0;
             score = 0;
             timeLeft = 120;
             navigate('quiz');
+            document.getElementById('quiz-title').textContent = 'Σωστό / Λάθος';
+            showQuestion();
+            startTimer();
+        }
+
+        function startEnglishTest1() {
+            currentQuizType = 'english';
+            shuffledQuestions = [...englishTest1Questions]; // No shuffle for fixed order
+            totalQuestions = 4;
+            currentQuestionIndex = 0;
+            score = 0;
+            timeLeft = 120;
+            navigate('quiz');
+            document.getElementById('quiz-title').textContent = 'English Test 1';
             showQuestion();
             startTimer();
         }
@@ -460,13 +521,46 @@
 
         function showQuestion() {
             const question = shuffledQuestions[currentQuestionIndex];
-            document.getElementById('question').textContent = question.text;
             document.getElementById('progress').textContent = `Ερώτηση ${currentQuestionIndex + 1}/${totalQuestions}`;
             document.getElementById('next-btn').style.display = 'none';
+            const advertisementsDiv = document.getElementById('advertisements');
+            const instructionsDiv = document.getElementById('instructions');
+            const answerOptions = document.getElementById('answer-options');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            answerOptions.innerHTML = '';
+            
+            if (currentQuizType === 'math') {
+                advertisementsDiv.style.display = 'none';
+                instructionsDiv.style.display = 'none';
+                document.getElementById('question').textContent = question.text;
+                submitBtn.style.display = 'none';
+                answerOptions.innerHTML = `
+                    <button class="answer-btn" onclick="answer(true)">ΣΩΣΤΟ</button>
+                    <button class="answer-btn" onclick="answer(false)">ΛΑΘΟΣ</button>
+                `;
+            } else if (currentQuizType === 'english') {
+                advertisementsDiv.style.display = 'block';
+                advertisementsDiv.textContent = englishAdvertisements;
+                instructionsDiv.style.display = 'block';
+                document.getElementById('question').textContent = question.text;
+                submitBtn.style.display = 'block';
+                question.options.forEach(option => {
+                    const label = document.createElement('label');
+                    label.innerHTML = `<input type="checkbox" name="answer" value="${option}"> ${option}`;
+                    answerOptions.appendChild(label);
+                });
+            }
+            
             const buttons = document.querySelectorAll('.answer-btn');
             buttons.forEach(btn => {
                 btn.disabled = false;
                 btn.classList.remove('correct', 'wrong');
+            });
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                cb.disabled = false;
             });
         }
 
@@ -475,6 +569,7 @@
             const question = shuffledQuestions[currentQuestionIndex];
             const buttons = document.querySelectorAll('.answer-btn');
             buttons.forEach(btn => btn.disabled = true);
+
             if (userAnswer === question.answer) {
                 buttons[userAnswer ? 0 : 1].classList.add('correct');
                 score++;
@@ -482,6 +577,33 @@
                 buttons[userAnswer ? 0 : 1].classList.add('wrong');
                 buttons[question.answer ? 0 : 1].classList.add('correct');
             }
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function submitAnswer() {
+            clearInterval(timer);
+            const question = shuffledQuestions[currentQuestionIndex];
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const selectedAnswers = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            const correctAnswers = question.answer;
+
+            checkboxes.forEach(cb => {
+                cb.disabled = true;
+                if (correctAnswers.includes(cb.value)) {
+                    cb.parentElement.style.color = '#28a745';
+                }
+                if (selectedAnswers.includes(cb.value) && !correctAnswers.includes(cb.value)) {
+                    cb.parentElement.style.color = '#dc3545';
+                }
+            });
+
+            const isCorrect = selectedAnswers.length === correctAnswers.length &&
+                             selectedAnswers.every(ans => correctAnswers.includes(ans));
+            if (isCorrect) score++;
+
+            document.getElementById('submit-btn').style.display = 'none';
             document.getElementById('next-btn').style.display = 'block';
         }
 
@@ -507,6 +629,10 @@
             else if (percentage >= 50) feedback = "Μπορείς καλύτερα! Δοκίμασε ξανά!";
             else feedback = "Χρειάζεται περισσότερη εξάσκηση! Ξαναδοκίμασε!";
             document.getElementById('feedback').textContent = feedback;
+
+            document.querySelector('#results-screen button:first-child').onclick = 
+                currentQuizType === 'math' ? () => navigate('quiz-options') : 
+                currentQuizType === 'english' ? () => navigate('english-menu') : null;
         }
 
         function playPauseAudio() {
@@ -555,9 +681,9 @@
             };
         }
 
-        function highlightSentence(currentTime, sentenceDuration) {
+        function highlightSentence(currentTime, sentenceDuration = null) {
             const sentences = document.querySelectorAll('.sentence');
-            const currentIndex = Math.floor(currentTime / sentenceDuration);
+            const currentIndex = Math.floor(currentTime / (sentenceDuration || 10));
             
             sentences.forEach((sentence, index) => {
                 if (index === currentIndex) {
@@ -596,5 +722,5 @@
             }, 1500);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'91fd9fbd1920b0d0',t:'MTc0MTg5MDg1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'91ff42378a8ebd00',t:'MTc0MTkwNzk5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
